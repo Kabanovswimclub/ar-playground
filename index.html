@@ -8,8 +8,8 @@
     <meta name="description" content="Экспериментальная AR-карточка методики базового удержания." />
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script type="module" crossorigin src="./assets/index-VcbxnjKW.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Cm_tIb2F.css">
+    <script type="module" crossorigin src="./assets/index-B0WfLzxs.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-PoMa7EoM.css">
   </head>
   <body>
     <main id="welcome" class="screen welcome-screen">
@@ -39,10 +39,31 @@
         device-orientation-permission-ui="enabled: false"
         embedded
       >
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"
+          cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-camera>
         <a-entity id="target" mindar-image-target="targetIndex: 0">
-          <a-plane position="0 0 0.02" width="1.04" height="0.72" color="#48c7cf" opacity="0.18"
-            animation="property: opacity; from: 0.08; to: 0.30; dur: 850; dir: alternate; loop: true"></a-plane>
+          <a-plane position="0 0 0.01" width="1.04" height="0.72" color="#48c7cf" opacity="0.10"
+            animation="property: opacity; from: 0.05; to: 0.18; dur: 900; dir: alternate; loop: true"></a-plane>
+          <a-plane position="0 0.245 0.025" width="0.93" height="0.16" color="#20232d" opacity="0.92" material="shader: flat"></a-plane>
+          <a-text value="BREATHING / 7 LEVELS" position="-0.40 0.26 0.035" width="0.84" color="#ffffff" font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+          <a-text id="ar-stage-label" value="1 / 7" position="0.27 0.215 0.036" width="0.32" color="#50c9cf" align="right" font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+
+          <a-entity id="level-buttons" position="0 0.06 0.04">
+            <a-circle class="clickable ar-level" data-level="0" position="-0.39 0 0" radius="0.061" color="#50c9cf"><a-text value="1" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="1" position="-0.26 0 0" radius="0.061" color="#ffffff"><a-text value="2" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="2" position="-0.13 0 0" radius="0.061" color="#ffffff"><a-text value="3" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="3" position="0 0 0" radius="0.061" color="#ffffff"><a-text value="4" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="4" position="0.13 0 0" radius="0.061" color="#ffffff"><a-text value="5" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="5" position="0.26 0 0" radius="0.061" color="#ffffff"><a-text value="6" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+            <a-circle class="clickable ar-level" data-level="6" position="0.39 0 0" radius="0.061" color="#ffffff"><a-text value="7" align="center" position="0 -0.018 0.01" width="0.34" color="#20232d"></a-text></a-circle>
+          </a-entity>
+
+          <a-ring position="0 -0.16 0.04" radius-inner="0.075" radius-outer="0.087" color="#50c9cf"
+            animation="property: rotation; to: 0 0 360; dur: 2600; loop: true; easing: linear"></a-ring>
+          <a-circle position="-0.16 -0.17 0.04" radius="0.025" color="#bff8f5" opacity="0.85"
+            animation="property: position; from: -0.16 -0.25 0.04; to: -0.16 0.02 0.04; dur: 1500; loop: true"></a-circle>
+          <a-circle position="0.17 -0.22 0.04" radius="0.018" color="#ffffff" opacity="0.8"
+            animation="property: position; from: 0.17 -0.27 0.04; to: 0.17 0.03 0.04; dur: 1900; delay: 450; loop: true"></a-circle>
         </a-entity>
       </a-scene>
       <header class="scanner-bar">
@@ -51,10 +72,19 @@
       </header>
       <div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <p id="scan-hint" class="scan-hint">Поместите карточку целиком в рамку</p>
-      <div id="found-panel" class="found-panel" hidden>
-        <span class="found-icon">✓</span>
-        <div><strong>Карточка найдена</strong><small>Выдохи в воду</small></div>
-        <button id="open-content" class="primary">Открыть этапы</button>
+      <div id="ar-drawer" class="ar-drawer" hidden>
+        <div class="drawer-grip"></div>
+        <div class="drawer-head">
+          <div><small id="drawer-kicker">УРОВЕНЬ 1 ИЗ 7</small><h2 id="drawer-title">Подуть ртом</h2></div>
+          <button id="freeze-ar" class="pin-button" aria-pressed="false" title="Удерживать меню">⌖</button>
+        </div>
+        <p id="drawer-hint" class="drawer-hint">Первое знакомство с направленным выдохом</p>
+        <div id="level-chips" class="level-chips" aria-label="Уровни дыхания"></div>
+        <div class="drawer-actions">
+          <button id="show-exercises" class="drawer-primary">Упражнения</button>
+          <button id="next-level" class="drawer-next">Далее →</button>
+        </div>
+        <div id="exercise-menu" class="exercise-menu" hidden></div>
       </div>
     </section>
 
