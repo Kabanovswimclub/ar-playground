@@ -72,10 +72,13 @@ const screens = {
 };
 const scene = document.querySelector("#ar-scene");
 const target = document.querySelector("#target");
-const foundPanel = document.querySelector("#found-panel");
+const arDrawer = document.querySelector("#ar-drawer");
 const scanHint = document.querySelector("#scan-hint");
 const scanStatus = document.querySelector("#scan-status");
 let arStarted = false;
+let currentLevel = 0;
+let pinned = false;
+let lostTimer;
 
 function showScreen(name) {
   Object.entries(screens).forEach(([key, node]) => { node.hidden = key !== name; });
@@ -108,7 +111,7 @@ function renderStages() {
 
 async function startScanner() {
   showScreen("scanner");
-  foundPanel.hidden = true;
+  arDrawer.hidden = true;
   scanHint.hidden = false;
   scanStatus.textContent = "Запускаем камеру…";
   try {
@@ -138,22 +141,67 @@ function openContent() {
 }
 
 target.addEventListener("targetFound", () => {
-  foundPanel.hidden = false;
+  clearTimeout(lostTimer);
+  arDrawer.hidden = false;
   scanHint.hidden = true;
-  scanStatus.textContent = "Карточка распознана";
+  scanStatus.textContent = "Карточка распознана · нажмите уровень";
+  selectLevel(currentLevel);
   navigator.vibrate?.(60);
 });
 
 target.addEventListener("targetLost", () => {
-  if (foundPanel.hidden) return;
-  scanStatus.textContent = "Карточка найдена — можно открыть этапы";
+  scanStatus.textContent = pinned ? "Меню зафиксировано" : "Верните карточку в кадр";
+  if (!pinned) lostTimer = setTimeout(() => { arDrawer.hidden = true; scanHint.hidden = false; }, 1200);
+});
+
+function selectLevel(index) {
+  currentLevel = (index + stages.length) % stages.length;
+  const stage = stages[currentLevel];
+  document.querySelector("#drawer-kicker").textContent = `УРОВЕНЬ ${currentLevel + 1} ИЗ ${stages.length}`;
+  document.querySelector("#drawer-title").textContent = stage.title;
+  document.querySelector("#drawer-hint").textContent = stage.hint;
+  document.querySelector("#ar-stage-label").setAttribute("value", `${currentLevel + 1} / 7`);
+  document.querySelectorAll(".ar-level").forEach((node, i) => node.setAttribute("color", i === currentLevel ? "#50c9cf" : "#ffffff"));
+  document.querySelectorAll(".level-chip").forEach((node, i) => {
+    node.classList.toggle("active", i === currentLevel);
+    node.setAttribute("aria-pressed", String(i === currentLevel));
+  });
+  document.querySelector("#exercise-menu").hidden = true;
+  document.querySelector("#show-exercises").textContent = "Упражнения";
+}
+
+function renderArControls() {
+  const chips = document.querySelector("#level-chips");
+  chips.innerHTML = stages.map((stage, i) => `<button class="level-chip${i === 0 ? " active" : ""}" data-level="${i}" aria-label="${stage.title}">${i + 1}</button>`).join("");
+  chips.addEventListener("click", event => {
+    const button = event.target.closest(".level-chip");
+    if (button) selectLevel(Number(button.dataset.level));
+  });
+  document.querySelectorAll(".ar-level").forEach(button => button.addEventListener("click", () => selectLevel(Number(button.dataset.level))));
+}
+
+document.querySelector("#show-exercises").addEventListener("click", () => {
+  const menu = document.querySelector("#exercise-menu");
+  const opening = menu.hidden;
+  menu.innerHTML = stages[currentLevel].exercises.map((exercise, i) => `
+    <button class="exercise-choice"><span>${i + 1}</span><strong>${exercise}</strong></button>`).join("");
+  menu.hidden = !opening;
+  document.querySelector("#show-exercises").textContent = opening ? "Скрыть" : "Упражнения";
+});
+
+document.querySelector("#next-level").addEventListener("click", () => selectLevel(currentLevel + 1));
+document.querySelector("#freeze-ar").addEventListener("click", event => {
+  pinned = !pinned;
+  event.currentTarget.classList.toggle("active", pinned);
+  event.currentTarget.setAttribute("aria-pressed", String(pinned));
+  scanStatus.textContent = pinned ? "Меню зафиксировано" : "Карточка распознана · нажмите уровень";
 });
 
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
-document.querySelector("#open-content").addEventListener("click", openContent);
 document.querySelector("#cancel-scan").addEventListener("click", () => { stopScanner(); showScreen("welcome"); });
 document.querySelector("#back-home").addEventListener("click", () => showScreen("welcome"));
 document.querySelector("#rescan").addEventListener("click", startScanner);
 
 renderStages();
+renderArControls();
