@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#292a36" />
+    <title>Выдохи в воду — AR-практикум</title>
+    <meta name="description" content="Экспериментальная AR-карточка методики базового удержания." />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <main id="welcome" class="screen welcome-screen">
+      <div class="brand">KABANOV SWIM CLUB <span>AR LAB</span></div>
+      <section class="welcome-card">
+        <div class="card-preview" aria-hidden="true">
+          <img src="./assets/breathing-card.png" alt="" />
+          <span class="scan-line"></span>
+        </div>
+        <p class="eyebrow">Методика базового удержания</p>
+        <h1>Выдохи в воду</h1>
+        <p class="lead">Наведите камеру на карточку, чтобы открыть последовательность навыков и игровые упражнения.</p>
+        <button id="start-scan" class="primary">Включить камеру</button>
+        <button id="demo-mode" class="secondary">Посмотреть без карточки</button>
+        <a class="print-link" href="./print-card.html" target="_blank">Карточка для печати</a>
+      </section>
+      <p class="privacy">Камера используется только для распознавания карточки. Видео никуда не отправляется.</p>
+    </main>
+
+    <section id="scanner" class="screen scanner-screen" hidden aria-label="Сканирование карточки">
+      <a-scene
+        id="ar-scene"
+        mindar-image="imageTargetSrc: ./assets/breathing-card.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5"
+        color-space="sRGB"
+        renderer="colorManagement: true; antialias: true; alpha: true"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+        embedded
+      >
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity id="target" mindar-image-target="targetIndex: 0">
+          <a-plane position="0 0 0.02" width="1.04" height="0.72" color="#48c7cf" opacity="0.18"
+            animation="property: opacity; from: 0.08; to: 0.30; dur: 850; dir: alternate; loop: true"></a-plane>
+        </a-entity>
+      </a-scene>
+      <header class="scanner-bar">
+        <button id="cancel-scan" class="icon-button" aria-label="Закрыть камеру">×</button>
+        <div><strong>Ищем карточку</strong><span id="scan-status">Выдохи в воду</span></div>
+      </header>
+      <div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p id="scan-hint" class="scan-hint">Поместите карточку целиком в рамку</p>
+      <div id="found-panel" class="found-panel" hidden>
+        <span class="found-icon">✓</span>
+        <div><strong>Карточка найдена</strong><small>Выдохи в воду</small></div>
+        <button id="open-content" class="primary">Открыть этапы</button>
+      </div>
+    </section>
+
+    <section id="content" class="content-screen" hidden>
+      <header class="content-header">
+        <button id="back-home" class="icon-button dark" aria-label="На главный экран">←</button>
+        <div><span>Методика</span><strong>Выдохи в воду</strong></div>
+        <button id="rescan" class="rescan">Сканировать</button>
+      </header>
+      <div class="progress-intro">
+        <div class="bubble bubble-one"></div><div class="bubble bubble-two"></div>
+        <p class="eyebrow">7 последовательных навыков</p>
+        <h1>От первого выдоха<br />до пузырей носом</h1>
+        <p>Выберите навык — откроются упражнения и игровые подсказки.</p>
+      </div>
+      <div id="stages" class="stages"></div>
+      <footer>Экспериментальная версия · Методика базового удержания</footer>
+    </section>
+  </body>
+</html>
