@@ -17,7 +17,7 @@ const scanStatus = document.querySelector("#scan-status");
 const tapTip = document.querySelector("#tap-tip");
 let arStarted = false;
 let currentLevel = 2;
-let view = "levels";
+let view = "hub";
 let textureSerial = 0;
 let lostTimer;
 let searchTimer;
@@ -74,7 +74,7 @@ function entity(tag, attrs = {}) {
 }
 
 function addPlane({ title, subtitle, number, tone = "aqua", position, width = .58, height = .16, action, delay = 0, panel = false }) {
-  const plane = entity("a-plane", { position: `${position[0]} ${position[1]} ${position[2] || .08}`, width, height, material: `src: ${makeTexture({ title, subtitle, number, tone, wide: width > .7, panel })}; transparent: true; shader: flat; alphaTest: 0.02` });
+  const plane = entity("a-plane", { position: `${position[0]} ${position[1]} ${position[2] || .08}`, width, height, material: `src: ${makeTexture({ title, subtitle, number, tone, wide: width > .7, panel })}; transparent: true; shader: flat; alphaTest: 0.02`, scale: "0.001 0.001 0.001", animation__in: `property: scale; to: 1 1 1; dur: 420; delay: ${delay}; easing: easeOutBack` });
   if (action) {
     plane.classList.add("clickable"); plane.dataset.action = action;
     plane.addEventListener("mouseenter", () => plane.setAttribute("scale", "1.06 1.06 1.06"));
@@ -88,11 +88,12 @@ function addBubbles() {
   [[-.14,-.18,.024,0],[.13,-.23,.018,500],[.04,-.24,.014,900]].forEach(([x,y,r,delay]) => arInterface.append(entity("a-ring", { position: `${x} ${y} .07`, "radius-inner": r * .72, "radius-outer": r, color: "#bff8f5", opacity: ".9", animation__float: `property: position; from: ${x} ${y} .07; to: ${x} .30 .07; dur: 1900; delay: ${delay}; loop: true; easing: easeInOutSine`, animation__fade: `property: opacity; from: .9; to: .12; dur: 1900; delay: ${delay}; loop: true` })));
 }
 
-function renderLevels() {
-  addPlane({ title: "7 СТУПЕНЕЙ ОБУЧЕНИЯ", tone: "dark", position: [-.08,.52,.07], width: .92, height: .12 });
-  addPlane({ title: "?", tone: "light", position: [.48,.52,.12], width: .15, height: .12, action: "help", delay: 80 });
-  const ys = [.38,.25,.12,-.01,-.14,-.27,-.40];
-  stages.forEach((stage, index) => addPlane({ title: stage.title, number: String(index + 1), tone: "aqua", position: [0,ys[index],.09 + index * .006], width: .98, height: .118, action: `level:${index}`, delay: 90 + index * 60 }));
+function renderHub() {
+  addPlane({ title: "7 СТУПЕНЕЙ ОБУЧЕНИЯ", subtitle: "Выдохи в воду", tone: "dark", position: [0,.44,.07], width: .86, height: .18 });
+  const positions = [[-.55,.25],[.55,.17],[-.55,.07],[.55,-.01],[-.55,-.11],[.55,-.19],[0,-.34]];
+  stages.forEach((stage, index) => addPlane({ title: stage.title, number: String(index + 1), tone: "aqua", position: [...positions[index],.09 + index * .006], width: .64, height: .15, action: `level:${index}`, delay: 90 + index * 65 }));
+  addPlane({ title: "? Как пользоваться", tone: "light", position: [.47,-.36,.15], width: .42, height: .105, action: "help", delay: 560 });
+  addBubbles();
 }
 
 function renderExercises() {
@@ -102,23 +103,23 @@ function renderExercises() {
   const gap = count === 4 ? .19 : .22;
   const startY = count === 4 ? .23 : .19;
   stage.exercises.forEach((exercise, index) => addPlane({ title: `Упражнение ${index + 1}`, subtitle: exercise, number: String(index + 1), tone: "light", position: [0,startY - index * gap,.09 + index * .01], width: 1.08, height: count === 4 ? .17 : .19, delay: 90 + index * 90 }));
-  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.42,.14], width: .64, height: .12, action: "levels", delay: 430 });
+  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.42,.14], width: .64, height: .12, action: "hub", delay: 430 });
 }
 
 function renderInfo(kind) {
   addPlane({ title: "КАК ПОЛЬЗОВАТЬСЯ", subtitle: "Короткая инструкция", tone: "dark", position: [0,.40,.08], width: .94, height: .19 });
   addPlane({ title: "Выберите ступень", subtitle: "Нажмите на её большую голубую кнопку. Вместо ступеней появится список упражнений. Чтобы вернуться, нажмите «Назад к ступеням».", tone: "light", position: [0,.04,.11], width: 1.08, height: .43, panel: true, delay: 100 });
-  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.30,.13], width: .64, height: .12, action: "levels", delay: 260 }); addBubbles();
+  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.30,.13], width: .64, height: .12, action: "hub", delay: 260 }); addBubbles();
 }
 
 function renderAR(nextView = view) {
   view = nextView; arInterface.innerHTML = ""; textureBin.innerHTML = "";
-  if (view === "levels") renderLevels(); else if (view === "exercises") renderExercises(); else renderInfo(view);
+  if (view === "hub") renderHub(); else if (view === "exercises") renderExercises(); else renderInfo(view);
 }
 
 function handleAction(action) {
   navigator.vibrate?.(30);
-  if (["levels","help"].includes(action)) renderAR(action);
+  if (action === "hub" || action === "help") renderAR(action);
   else if (action.startsWith("level:")) { currentLevel = Number(action.split(":")[1]); renderAR("exercises"); }
 }
 
@@ -143,11 +144,11 @@ async function startScanner() {
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; navigator.vibrate?.(60); });
-target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; }, 700); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
+target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; arInterface.setAttribute("visible", false); }, 700); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
 document.querySelector("#cancel-scan").addEventListener("click", () => { stopScanner(); showScreen("welcome"); });
 document.querySelector("#back-home").addEventListener("click", () => showScreen("welcome"));
 document.querySelector("#rescan").addEventListener("click", startScanner);
-renderStages(); renderAR("levels");
+renderStages(); renderAR("hub");
