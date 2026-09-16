@@ -8,8 +8,8 @@
     <meta name="description" content="Экспериментальная AR-карточка методики базового удержания." />
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script type="module" crossorigin src="./assets/index-Bpji-eli.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-B6lcu7Db.css">
+    <script type="module" crossorigin src="./assets/index-DvjyulRA.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BwYZ8f5q.css">
   </head>
   <body>
     <main id="welcome" class="screen welcome-screen">
@@ -51,6 +51,23 @@
       </header>
       <div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <p id="scan-hint" class="scan-hint">Поместите карточку целиком в рамку</p>
+      <div id="tracked-ui" class="tracked-ui" hidden>
+        <div id="tracked-levels" class="tracked-levels">
+          <div class="tracked-title"><strong>7 ступеней</strong><span>Выдохи в воду</span></div>
+          <div id="tracked-level-buttons" class="tracked-level-buttons"></div>
+          <button id="tracked-help" class="tracked-help">? Как пользоваться</button>
+        </div>
+        <div id="tracked-exercises" class="tracked-exercises" hidden>
+          <div class="exercise-heading"><small id="tracked-kicker"></small><strong id="tracked-stage-title"></strong><span id="tracked-stage-hint"></span></div>
+          <ol id="tracked-exercise-list"></ol>
+          <button id="tracked-back" class="tracked-back">← Назад к ступеням</button>
+        </div>
+        <div id="tracked-instructions" class="tracked-exercises" hidden>
+          <div class="exercise-heading"><small>ИНСТРУКЦИЯ</small><strong>Как пользоваться</strong></div>
+          <p>Выберите одну из семи ступеней. Откроется список упражнений для этого этапа.</p>
+          <button id="tracked-help-back" class="tracked-back">← Назад к ступеням</button>
+        </div>
+      </div>
       <div id="tap-tip" class="tap-tip" hidden>Нажимайте на кнопки вокруг карточки</div>
     </section>
 

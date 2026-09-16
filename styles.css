@@ -63,6 +63,35 @@ h1 { margin: 0; font-size: clamp(2.15rem, 9vw, 3.8rem); line-height: .98; letter
 .tap-tip { position: absolute; z-index: 4; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 10px 15px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; color: #fff; background: rgba(20,23,31,.64); backdrop-filter: blur(12px); font-size: .78rem; text-align: center; animation: tip-in .35s ease-out; }
 @keyframes tip-in { from { opacity: 0; transform: translate(-50%,10px); } }
 
+.tracked-ui { position: absolute; z-index: 5; inset: 88px 10px 68px; pointer-events: none; display: grid; place-items: center; }
+.tracked-levels { width: min(100%, 560px); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; animation: tracked-in .35s ease-out; }
+.tracked-title { grid-column: 1 / -1; justify-self: center; min-width: 220px; padding: 11px 22px; display: flex; flex-direction: column; align-items: center; color: white; border: 1px solid rgba(255,255,255,.35); border-radius: 18px; background: rgba(31,35,47,.92); box-shadow: 0 12px 32px rgba(0,0,0,.35); backdrop-filter: blur(12px); }
+.tracked-title strong { font-size: 1rem; }
+.tracked-title span { margin-top: 2px; color: #9ce5e4; font-size: .72rem; }
+.tracked-level-buttons { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.tracked-level-button, .tracked-help, .tracked-back { pointer-events: auto; border: 1px solid rgba(255,255,255,.5); color: white; background: linear-gradient(135deg,#07818d,#25cbd2); box-shadow: 0 10px 24px rgba(0,0,0,.32); backdrop-filter: blur(10px); font-weight: 800; }
+.tracked-level-button { min-height: 58px; padding: 8px 11px; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: center; border-radius: 18px; text-align: left; font-size: clamp(.76rem,3.3vw,.95rem); line-height: 1.15; }
+.tracked-level-button b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.22); font-size: .75rem; }
+.tracked-level-button:last-child { grid-column: 1 / -1; width: calc(50% - 5px); justify-self: center; }
+.tracked-help { grid-column: 1 / -1; justify-self: center; padding: 9px 18px; border-radius: 999px; color: #252936; background: rgba(255,255,255,.94); font-size: .76rem; }
+.tracked-exercises { pointer-events: auto; width: min(100%, 520px); max-height: 100%; overflow: auto; padding: 15px; color: #252936; border: 1px solid rgba(255,255,255,.65); border-radius: 24px; background: rgba(255,255,255,.94); box-shadow: 0 20px 55px rgba(0,0,0,.48); backdrop-filter: blur(18px); animation: tracked-in .3s ease-out; }
+.exercise-heading { display: flex; flex-direction: column; gap: 3px; }
+.exercise-heading small { color: #087f8b; font-size: .68rem; font-weight: 900; letter-spacing: .1em; }
+.exercise-heading strong { font-size: 1.25rem; line-height: 1.15; }
+.exercise-heading span, .tracked-exercises p { color: #636873; font-size: .82rem; line-height: 1.4; }
+.tracked-exercises ol { margin: 12px 0; padding: 0; list-style: none; counter-reset: tracked; }
+.tracked-exercises li { counter-increment: tracked; position: relative; padding: 10px 6px 10px 38px; border-top: 1px solid #dcecec; font-size: .82rem; line-height: 1.35; }
+.tracked-exercises li::before { content: counter(tracked); position: absolute; left: 3px; top: 9px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; color: #087f8b; background: #dff6f5; font-weight: 900; }
+.tracked-back { width: 100%; min-height: 44px; border-radius: 14px; }
+@keyframes tracked-in { from { opacity: 0; transform: translateY(12px) scale(.96); } }
+
+@media (max-height: 700px) {
+  .tracked-ui { top: 76px; bottom: 55px; }
+  .tracked-levels { gap: 6px; }
+  .tracked-level-buttons { gap: 6px; }
+  .tracked-level-button { min-height: 47px; }
+}
+
 .content-screen { min-height: 100svh; background: #f5fbfb; }
 .content-header { position: sticky; top: 0; z-index: 4; display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: max(12px, env(safe-area-inset-top)) 16px 12px; background: rgba(245,251,251,.93); border-bottom: 1px solid var(--line); backdrop-filter: blur(16px); }
 .content-header div { display: flex; flex-direction: column; line-height: 1.15; }

@@ -15,6 +15,10 @@ const arInterface = document.querySelector("#ar-interface");
 const scanHint = document.querySelector("#scan-hint");
 const scanStatus = document.querySelector("#scan-status");
 const tapTip = document.querySelector("#tap-tip");
+const trackedUi = document.querySelector("#tracked-ui");
+const trackedLevels = document.querySelector("#tracked-levels");
+const trackedExercises = document.querySelector("#tracked-exercises");
+const trackedInstructions = document.querySelector("#tracked-instructions");
 let arStarted = false;
 let currentLevel = 2;
 let currentExercise = 0;
@@ -151,19 +155,44 @@ function renderStages() {
   holder.addEventListener("click", event => { const button = event.target.closest(".stage-toggle"); if (!button) return; const body = document.querySelector(`#${button.getAttribute("aria-controls")}`); const open = button.getAttribute("aria-expanded") !== "true"; button.setAttribute("aria-expanded", String(open)); body.hidden = !open; });
 }
 
+function showTrackedPanel(name) {
+  trackedLevels.hidden = name !== "levels";
+  trackedExercises.hidden = name !== "exercises";
+  trackedInstructions.hidden = name !== "instructions";
+}
+
+function renderTrackedControls() {
+  document.querySelector("#tracked-level-buttons").innerHTML = stages.map((stage, index) => `<button class="tracked-level-button" data-tracked-level="${index}"><b>${index + 1}</b><span>${stage.title}</span></button>`).join("");
+  document.querySelector("#tracked-level-buttons").addEventListener("click", event => {
+    const button = event.target.closest("[data-tracked-level]");
+    if (!button) return;
+    const index = Number(button.dataset.trackedLevel);
+    const stage = stages[index];
+    document.querySelector("#tracked-kicker").textContent = `СТУПЕНЬ ${index + 1} ИЗ ${stages.length}`;
+    document.querySelector("#tracked-stage-title").textContent = stage.title;
+    document.querySelector("#tracked-stage-hint").textContent = stage.hint;
+    document.querySelector("#tracked-exercise-list").innerHTML = stage.exercises.map(exercise => `<li>${exercise}</li>`).join("");
+    showTrackedPanel("exercises");
+    navigator.vibrate?.(30);
+  });
+  document.querySelector("#tracked-back").addEventListener("click", () => showTrackedPanel("levels"));
+  document.querySelector("#tracked-help").addEventListener("click", () => showTrackedPanel("instructions"));
+  document.querySelector("#tracked-help-back").addEventListener("click", () => showTrackedPanel("levels"));
+}
+
 async function startScanner() {
-  showScreen("scanner"); scanHint.hidden = false; tapTip.hidden = true; scanStatus.textContent = "Запускаем камеру…";
+  showScreen("scanner"); scanHint.hidden = false; tapTip.hidden = true; trackedUi.hidden = true; showTrackedPanel("levels"); scanStatus.textContent = "Запускаем камеру…";
   try { if (!scene.hasLoaded) await new Promise(resolve => scene.addEventListener("loaded", resolve, { once: true })); await scene.systems["mindar-image-system"].start(); arStarted = true; scanStatus.textContent = "Выдохи в воду"; }
   catch (error) { console.error(error); scanStatus.textContent = "Камера недоступна"; scanHint.textContent = location.protocol === "https:" ? "Разрешите доступ к камере в настройках браузера" : "Для камеры откройте защищённую HTTPS-ссылку"; }
 }
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
-target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; arInterface.setAttribute("visible", false); }, 700); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); scanHint.hidden = true; tapTip.hidden = true; trackedUi.hidden = false; showTrackedPanel("levels"); scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
+target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; trackedUi.hidden = true; arInterface.setAttribute("visible", false); }, 1200); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
 document.querySelector("#cancel-scan").addEventListener("click", () => { stopScanner(); showScreen("welcome"); });
 document.querySelector("#back-home").addEventListener("click", () => showScreen("welcome"));
 document.querySelector("#rescan").addEventListener("click", startScanner);
-renderStages(); renderAR("hub");
+renderStages(); renderTrackedControls(); renderAR("hub");
