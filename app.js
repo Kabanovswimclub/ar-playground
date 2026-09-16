@@ -31,42 +31,44 @@ function showScreen(name) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-function roundedRect(ctx, x, y, w, h, r) {
-  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill();
-}
-
 function makeTexture({ title, subtitle = "", number = "", tone = "aqua", wide = false, panel = false }) {
-  const canvas = document.createElement("canvas");
-  canvas.id = `ar-texture-${textureSerial++}`;
-  canvas.width = wide ? 1200 : 920; canvas.height = panel ? 500 : 250;
-  const ctx = canvas.getContext("2d");
+  const id = `ar-texture-${textureSerial++}`;
+  const width = wide ? 1200 : 920;
+  const height = panel ? 500 : 250;
   const palettes = { aqua: ["#087f8b", "#20c7d2", "#ffffff"], dark: ["#20232e", "#343948", "#ffffff"], light: ["#f7ffff", "#ffffff", "#20232e"], coral: ["#e56656", "#ff907e", "#ffffff"] };
   const [from, to, ink] = palettes[tone];
-  const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height); g.addColorStop(0, from); g.addColorStop(1, to);
-  ctx.shadowColor = "rgba(0,0,0,.34)"; ctx.shadowBlur = 28; ctx.shadowOffsetY = 14; ctx.fillStyle = g;
-  roundedRect(ctx, 30, 24, canvas.width - 60, canvas.height - 62, panel ? 50 : 94);
-  ctx.shadowColor = "transparent"; ctx.strokeStyle = tone === "light" ? "#bce9e9" : "rgba(255,255,255,.38)"; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.roundRect(44, 38, canvas.width - 88, canvas.height - 90, panel ? 38 : 70); ctx.stroke();
-  let left = 78;
-  if (number) {
-    ctx.fillStyle = tone === "light" ? "#d9f5f4" : "rgba(255,255,255,.2)"; ctx.beginPath(); ctx.arc(112, canvas.height / 2 - 9, 48, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = ink; ctx.font = "800 45px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(number, 112, canvas.height / 2 - 7); left = 185;
-  }
-  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = ink;
-  const titleSize = panel ? 52 : (title.length > 22 ? 38 : 48); ctx.font = `800 ${titleSize}px Arial`;
-  const titleY = subtitle ? (panel ? 132 : 107) : canvas.height / 2 + 8; wrapText(ctx, title, left, titleY, canvas.width - left - 65, panel ? 60 : 48, panel ? 2 : 1);
-  if (subtitle) { ctx.globalAlpha = .78; ctx.font = `${panel ? 32 : 29}px Arial`; wrapText(ctx, subtitle, left, titleY + (panel ? 124 : 50), canvas.width - left - 80, panel ? 45 : 37, panel ? 4 : 2); ctx.globalAlpha = 1; }
-  textureBin.append(canvas); return `#${canvas.id}`;
+  const left = number ? 185 : 78;
+  const titleSize = panel ? 52 : (title.length > 22 ? 38 : 48);
+  const titleY = subtitle ? (panel ? 132 : 107) : height / 2 + 8;
+  const titleLines = splitLines(title, panel ? 32 : 28, panel ? 2 : 1);
+  const subLines = splitLines(subtitle, panel ? 52 : 45, panel ? 4 : 2);
+  const titleSvg = titleLines.map((line, i) => `<tspan x="${left}" y="${titleY + i * (panel ? 60 : 48)}">${escapeXml(line)}</tspan>`).join("");
+  const subStart = titleY + (panel ? 124 : 50);
+  const subtitleSvg = subLines.map((line, i) => `<tspan x="${left}" y="${subStart + i * (panel ? 45 : 37)}">${escapeXml(line)}</tspan>`).join("");
+  const numberSvg = number ? `<circle cx="112" cy="${height / 2 - 9}" r="48" fill="${tone === "light" ? "#d9f5f4" : "#ffffff"}" fill-opacity="${tone === "light" ? "1" : ".2"}"/><text x="112" y="${height / 2 + 7}" text-anchor="middle" font-family="Arial,sans-serif" font-size="45" font-weight="800" fill="${ink}">${escapeXml(number)}</text>` : "";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient><filter id="s" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-opacity=".34"/></filter></defs><rect x="30" y="24" width="${width - 60}" height="${height - 62}" rx="${panel ? 50 : 94}" fill="url(#g)" filter="url(#s)"/><rect x="44" y="38" width="${width - 88}" height="${height - 90}" rx="${panel ? 38 : 70}" fill="none" stroke="${tone === "light" ? "#bce9e9" : "#ffffff"}" stroke-opacity="${tone === "light" ? "1" : ".38"}" stroke-width="5"/>${numberSvg}<text font-family="Arial,sans-serif" font-size="${titleSize}" font-weight="800" fill="${ink}">${titleSvg}</text>${subtitle ? `<text font-family="Arial,sans-serif" font-size="${panel ? 32 : 29}" fill="${ink}" fill-opacity=".78">${subtitleSvg}</text>` : ""}</svg>`;
+  const image = document.createElement("img");
+  image.id = id;
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  textureBin.append(image);
+  return `#${id}`;
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
-  const words = text.split(" "); let line = ""; let lines = 0;
-  for (let i = 0; i < words.length; i++) {
-    const test = `${line}${words[i]} `;
-    if (ctx.measureText(test).width > maxWidth && line) { ctx.fillText(line.trim(), x, y); line = `${words[i]} `; y += lineHeight; lines++; if (lines >= maxLines - 1) { line += words.slice(i + 1).join(" "); break; } }
-    else line = test;
-  }
-  if (line) { let out = line.trim(); while (ctx.measureText(out).width > maxWidth && out.length > 4) out = `${out.slice(0,-2)}…`; ctx.fillText(out, x, y); }
+function splitLines(text, maxChars, maxLines) {
+  if (!text) return [];
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  words.forEach(word => {
+    if (`${line} ${word}`.trim().length > maxChars && line && lines.length < maxLines - 1) { lines.push(line); line = word; }
+    else line = `${line} ${word}`.trim();
+  });
+  if (line) lines.push(line.length > maxChars + 8 ? `${line.slice(0, maxChars + 5)}…` : line);
+  return lines.slice(0, maxLines);
+}
+
+function escapeXml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char]);
 }
 
 function entity(tag, attrs = {}) {
