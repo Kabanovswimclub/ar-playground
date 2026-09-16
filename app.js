@@ -25,6 +25,8 @@ let currentExercise = 0;
 let view = "hub";
 let textureSerial = 0;
 let lostTimer;
+let targetVisible = false;
+let readingMode = false;
 
 const textureBin = document.createElement("div");
 textureBin.hidden = true;
@@ -159,6 +161,32 @@ function showTrackedPanel(name) {
   trackedLevels.hidden = name !== "levels";
   trackedExercises.hidden = name !== "exercises";
   trackedInstructions.hidden = name !== "instructions";
+  readingMode = name !== "levels";
+  trackedUi.classList.toggle("is-reading", readingMode);
+}
+
+function projectTargetPoint(x, y, camera, rect) {
+  const point = new THREE.Vector3(x, y, 0);
+  target.object3D.localToWorld(point);
+  point.project(camera);
+  return { x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2 };
+}
+
+function updateTrackedPose() {
+  if (targetVisible && !trackedUi.hidden && !readingMode && scene.renderer) {
+    const camera = scene.camera;
+    const canvas = scene.renderer.domElement;
+    if (camera && canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const center = projectTargetPoint(0, 0, camera, rect);
+      const right = projectTargetPoint(1, 0, camera, rect);
+      const markerWidth = Math.hypot(right.x - center.x, right.y - center.y);
+      const angle = Math.atan2(right.y - center.y, right.x - center.x);
+      const scale = Math.max(.68, Math.min(1.12, markerWidth / 430));
+      trackedUi.style.transform = `translate(${center.x}px,${center.y}px) translate(-50%,-50%) rotate(${angle}rad) scale(${scale})`;
+    }
+  }
+  requestAnimationFrame(updateTrackedPose);
 }
 
 function renderTrackedControls() {
@@ -188,11 +216,11 @@ async function startScanner() {
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); scanHint.hidden = true; tapTip.hidden = true; trackedUi.hidden = false; showTrackedPanel("levels"); scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
-target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; trackedUi.hidden = true; arInterface.setAttribute("visible", false); }, 1200); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); targetVisible = true; scanHint.hidden = true; tapTip.hidden = true; trackedUi.hidden = false; showTrackedPanel("levels"); scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
+target.addEventListener("targetLost", () => { targetVisible = false; scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { if (!readingMode) { scanHint.hidden = false; trackedUi.hidden = true; } arInterface.setAttribute("visible", false); }, 1200); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
 document.querySelector("#cancel-scan").addEventListener("click", () => { stopScanner(); showScreen("welcome"); });
 document.querySelector("#back-home").addEventListener("click", () => showScreen("welcome"));
 document.querySelector("#rescan").addEventListener("click", startScanner);
-renderStages(); renderTrackedControls(); renderAR("hub");
+renderStages(); renderTrackedControls(); renderAR("hub"); updateTrackedPose();
