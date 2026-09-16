@@ -2,10 +2,10 @@ const stages = [
   { title: "Подуть ртом", hint: "Первое знакомство с направленным выдохом", exercises: ["Дуем на предмет, отгоняя его от себя без рук.", "Гудим как самолёт, произнося «уууу».", "Делаем ямку на воде направленным выдохом.", "Задуваем воображаемую свечу над водой."] },
   { title: "Задержать дыхание", hint: "Не опуская лицо в воду", exercises: ["Пробуем с зажатым носом и без него.", "Не дышим короткое комфортное время.", "Успеваем собрать башню или убрать игрушки."] },
   { title: "Пузыри ртом", hint: "Выдох в воду через трубочку", exercises: ["Готовим пузырьковый коктейль в стаканчике.", "Дуем через трубочку и «варим» игрушку.", "Делаем семью пузырей разного размера и звука."] },
-  { title: "Опустить лицо под воду", hint: "Сначала зажимаем нос рукой", exercises: ["Проверяем: рот закрыт, очки надеты, нос зажат.", "Рассматриваем игрушку под водой.", "Играем под водой в «Угадай что».", "Считаем показанные под водой пальцы."] },
-  { title: "Высморкнуться носом", hint: "Подготовка к выдоху носом", exercises: ["Высмаркиваемся со звуком «хуммм».", "Мягко закрываем одну ноздрю и повторяем."] },
-  { title: "Лицо под воду без рук", hint: "Погружение на задержке дыхания", exercises: ["Сначала делаем несколько выдохов носом.", "Повторяем под водой игру «Угадай что».", "Считаем пальцы после погружения."] },
-  { title: "Выдох носом в воду", hint: "Контрольный навык", exercises: ["Делаем семью из пяти пузырей.", "Соревнуемся, у кого пузыри громче.", "Соревнуемся, у кого выдох дольше."] }
+  { title: "Лицо под воду", hint: "Сначала зажимаем нос рукой", exercises: ["Проверяем: рот закрыт, очки надеты, нос зажат.", "Рассматриваем игрушку под водой.", "Играем под водой в «Угадай что».", "Считаем показанные под водой пальцы."] },
+  { title: "Выдох носом", hint: "Подготовка на суше", exercises: ["Высмаркиваемся со звуком «хуммм».", "Мягко закрываем одну ноздрю и повторяем."] },
+  { title: "Лицо без рук", hint: "Погружение на задержке дыхания", exercises: ["Сначала делаем несколько выдохов носом.", "Повторяем под водой игру «Угадай что».", "Считаем пальцы после погружения."] },
+  { title: "Пузыри носом", hint: "Контрольный навык", exercises: ["Делаем семью из пяти пузырей.", "Соревнуемся, у кого пузыри громче.", "Соревнуемся, у кого выдох дольше."] }
 ];
 
 const screens = { welcome: document.querySelector("#welcome"), scanner: document.querySelector("#scanner"), content: document.querySelector("#content") };
@@ -17,10 +17,10 @@ const scanStatus = document.querySelector("#scan-status");
 const tapTip = document.querySelector("#tap-tip");
 let arStarted = false;
 let currentLevel = 2;
+let currentExercise = 0;
 let view = "hub";
 let textureSerial = 0;
 let lostTimer;
-let searchTimer;
 
 const textureBin = document.createElement("div");
 textureBin.hidden = true;
@@ -89,38 +89,58 @@ function addBubbles() {
 }
 
 function renderHub() {
-  addPlane({ title: "7 СТУПЕНЕЙ ОБУЧЕНИЯ", subtitle: "Выдохи в воду", tone: "dark", position: [0,.44,.07], width: .86, height: .18 });
-  const positions = [[-.55,.25],[.55,.17],[-.55,.07],[.55,-.01],[-.55,-.11],[.55,-.19],[0,-.34]];
-  stages.forEach((stage, index) => addPlane({ title: stage.title, number: String(index + 1), tone: "aqua", position: [...positions[index],.09 + index * .006], width: .64, height: .15, action: `level:${index}`, delay: 90 + index * 65 }));
-  addPlane({ title: "? Как пользоваться", tone: "light", position: [.47,-.36,.15], width: .42, height: .105, action: "help", delay: 560 });
+  addPlane({ title: "ВЫДОХИ В ВОДУ", subtitle: "Интерактивная карта навыка", tone: "dark", position: [0,.43,.07], width: .86, height: .19 });
+  addPlane({ title: "7 уровней", subtitle: "Путь обучения", number: "01", position: [-.55,.19,.09], action: "levels", delay: 100 });
+  addPlane({ title: "Упражнения", subtitle: "Для занятия", number: "02", position: [.55,.04,.1], action: "exercises", delay: 190 });
+  addPlane({ title: "Типичные ошибки", subtitle: "Что исправить", number: "03", tone: "coral", position: [-.55,-.13,.11], action: "mistakes", delay: 280 });
+  addPlane({ title: "Как заниматься", subtitle: "Подсказка родителю", number: "04", tone: "light", position: [.55,-.29,.12], action: "how", delay: 370 });
   addBubbles();
+}
+
+function renderLevels() {
+  addPlane({ title: "ВЫБЕРИТЕ УРОВЕНЬ", subtitle: "Нажмите на один из этапов", tone: "dark", position: [0,.45,.07], width: .84, height: .18 });
+  const ys = [.26,.09,-.08,-.25];
+  stages.forEach((stage, index) => { const side = index % 2 === 0 ? -1 : 1; const row = Math.floor(index / 2); addPlane({ title: stage.title, number: String(index + 1), tone: index === currentLevel ? "aqua" : "light", position: [side * .55, ys[row], .09 + index * .004], width: .55, height: .145, action: `level:${index}`, delay: 65 + index * 55 }); });
+  addPlane({ title: "‹ Назад", tone: "dark", position: [.42,-.42,.1], width: .32, height: .11, action: "hub", delay: 420 });
 }
 
 function renderExercises() {
   const stage = stages[currentLevel];
   addPlane({ title: `${currentLevel + 1}. ${stage.title}`, subtitle: stage.hint, tone: "dark", position: [0,.44,.07], width: .9, height: .19 });
-  const count = stage.exercises.length;
-  const gap = count === 4 ? .19 : .22;
-  const startY = count === 4 ? .23 : .19;
-  stage.exercises.forEach((exercise, index) => addPlane({ title: `Упражнение ${index + 1}`, subtitle: exercise, number: String(index + 1), tone: "light", position: [0,startY - index * gap,.09 + index * .01], width: 1.08, height: count === 4 ? .17 : .19, delay: 90 + index * 90 }));
-  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.42,.14], width: .64, height: .12, action: "hub", delay: 430 });
+  const positions = [[-.54,.22],[.54,.07],[-.54,-.10],[.54,-.25]];
+  stage.exercises.slice(0,4).forEach((exercise, index) => addPlane({ title: `Упражнение ${index + 1}`, subtitle: exercise, number: String(index + 1), tone: index % 2 ? "light" : "aqua", position: [...positions[index],.09 + index * .01], width: .62, height: .19, action: `exercise:${index}`, delay: 90 + index * 90 }));
+  addPlane({ title: "‹ Уровни", tone: "dark", position: [-.21,-.43,.12], width: .34, height: .105, action: "levels", delay: 430 });
+  addPlane({ title: "Следующий ›", tone: "aqua", position: [.22,-.43,.12], width: .38, height: .105, action: "next", delay: 480 });
+}
+
+function renderDetail() {
+  const stage = stages[currentLevel];
+  addPlane({ title: `УПРАЖНЕНИЕ ${currentExercise + 1}`, subtitle: `${currentLevel + 1}-й уровень · ${stage.title}`, tone: "dark", position: [0,.43,.08], width: .86, height: .18 });
+  addPlane({ title: stage.exercises[currentExercise], subtitle: "Выполняйте спокойно, в игровой форме. Остановитесь, если ребёнку некомфортно.", tone: "light", position: [0,.08,.11], width: 1.05, height: .42, panel: true, delay: 100 });
+  addPlane({ title: "‹ К списку", tone: "dark", position: [-.24,-.30,.13], width: .4, height: .12, action: "exercises", delay: 250 });
+  addPlane({ title: "Следующее ›", tone: "aqua", position: [.24,-.30,.13], width: .42, height: .12, action: "nextExercise", delay: 310 }); addBubbles();
 }
 
 function renderInfo(kind) {
-  addPlane({ title: "КАК ПОЛЬЗОВАТЬСЯ", subtitle: "Короткая инструкция", tone: "dark", position: [0,.40,.08], width: .94, height: .19 });
-  addPlane({ title: "Выберите ступень", subtitle: "Нажмите на её большую голубую кнопку. Вместо ступеней появится список упражнений. Чтобы вернуться, нажмите «Назад к ступеням».", tone: "light", position: [0,.04,.11], width: 1.08, height: .43, panel: true, delay: 100 });
-  addPlane({ title: "‹ Назад к ступеням", tone: "aqua", position: [0,-.30,.13], width: .64, height: .12, action: "hub", delay: 260 }); addBubbles();
+  const mistake = "Ребёнок задерживает воздух с напряжением, торопится или боится воды у лица.";
+  const how = "Выберите один уровень и 1–2 упражнения. Повторяйте коротко, через игру и без принуждения.";
+  addPlane({ title: kind === "mistakes" ? "ТИПИЧНЫЕ ОШИБКИ" : "КАК ЗАНИМАТЬСЯ", subtitle: kind === "mistakes" ? "Подсказка инструктору и родителю" : "Простой сценарий занятия", tone: kind === "mistakes" ? "coral" : "dark", position: [0,.42,.08], width: .94, height: .19 });
+  addPlane({ title: kind === "mistakes" ? mistake : how, subtitle: kind === "mistakes" ? "Вернитесь на предыдущий уверенный уровень и снова превратите задачу в игру." : "Заканчивайте на успешной попытке. Следующий уровень открывайте, когда предыдущий даётся уверенно.", tone: "light", position: [0,.05,.11], width: 1.05, height: .43, panel: true, delay: 100 });
+  addPlane({ title: "‹ Главное меню", tone: "aqua", position: [0,-.30,.13], width: .52, height: .12, action: "hub", delay: 260 }); addBubbles();
 }
 
 function renderAR(nextView = view) {
   view = nextView; arInterface.innerHTML = ""; textureBin.innerHTML = "";
-  if (view === "hub") renderHub(); else if (view === "exercises") renderExercises(); else renderInfo(view);
+  if (view === "hub") renderHub(); else if (view === "levels") renderLevels(); else if (view === "exercises") renderExercises(); else if (view === "detail") renderDetail(); else renderInfo(view);
 }
 
 function handleAction(action) {
   navigator.vibrate?.(30);
-  if (action === "hub" || action === "help") renderAR(action);
-  else if (action.startsWith("level:")) { currentLevel = Number(action.split(":")[1]); renderAR("exercises"); }
+  if (["hub","levels","exercises","mistakes","how"].includes(action)) renderAR(action);
+  else if (action === "next") { currentLevel = (currentLevel + 1) % stages.length; renderAR("exercises"); }
+  else if (action === "nextExercise") { currentExercise = (currentExercise + 1) % stages[currentLevel].exercises.length; renderAR("detail"); }
+  else if (action.startsWith("level:")) { currentLevel = Number(action.split(":")[1]); currentExercise = 0; renderAR("exercises"); }
+  else if (action.startsWith("exercise:")) { currentExercise = Number(action.split(":")[1]); renderAR("detail"); }
 }
 
 function renderStages() {
@@ -130,21 +150,14 @@ function renderStages() {
 }
 
 async function startScanner() {
-  showScreen("scanner"); scanHint.hidden = false; scanHint.textContent = "Поместите карточку целиком в рамку"; tapTip.hidden = true; scanStatus.textContent = "Запускаем камеру…";
-  try {
-    if (!scene.hasLoaded) await new Promise(resolve => scene.addEventListener("loaded", resolve, { once: true }));
-    await scene.systems["mindar-image-system"].start(); arStarted = true; scanStatus.textContent = "Ищем изображение…";
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      if (!arInterface.getAttribute("visible")) scanHint.textContent = "Отдалите телефон: вся карточка должна быть видна целиком, без бликов";
-    }, 7000);
-  }
+  showScreen("scanner"); scanHint.hidden = false; tapTip.hidden = true; scanStatus.textContent = "Запускаем камеру…";
+  try { if (!scene.hasLoaded) await new Promise(resolve => scene.addEventListener("loaded", resolve, { once: true })); await scene.systems["mindar-image-system"].start(); arStarted = true; scanStatus.textContent = "Выдохи в воду"; }
   catch (error) { console.error(error); scanStatus.textContent = "Камера недоступна"; scanHint.textContent = location.protocol === "https:" ? "Разрешите доступ к камере в настройках браузера" : "Для камеры откройте защищённую HTTPS-ссылку"; }
 }
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
 target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; arInterface.setAttribute("visible", false); }, 700); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
