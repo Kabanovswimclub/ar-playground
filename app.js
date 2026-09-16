@@ -20,6 +20,7 @@ let currentLevel = 2;
 let view = "levels";
 let textureSerial = 0;
 let lostTimer;
+let searchTimer;
 
 const textureBin = document.createElement("div");
 textureBin.hidden = true;
@@ -128,14 +129,21 @@ function renderStages() {
 }
 
 async function startScanner() {
-  showScreen("scanner"); scanHint.hidden = false; tapTip.hidden = true; scanStatus.textContent = "Запускаем камеру…";
-  try { if (!scene.hasLoaded) await new Promise(resolve => scene.addEventListener("loaded", resolve, { once: true })); await scene.systems["mindar-image-system"].start(); arStarted = true; scanStatus.textContent = "Выдохи в воду"; }
+  showScreen("scanner"); scanHint.hidden = false; scanHint.textContent = "Поместите карточку целиком в рамку"; tapTip.hidden = true; scanStatus.textContent = "Запускаем камеру…";
+  try {
+    if (!scene.hasLoaded) await new Promise(resolve => scene.addEventListener("loaded", resolve, { once: true }));
+    await scene.systems["mindar-image-system"].start(); arStarted = true; scanStatus.textContent = "Ищем изображение…";
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      if (!arInterface.getAttribute("visible")) scanHint.textContent = "Отдалите телефон: вся карточка должна быть видна целиком, без бликов";
+    }, 7000);
+  }
   catch (error) { console.error(error); scanStatus.textContent = "Камера недоступна"; scanHint.textContent = location.protocol === "https:" ? "Разрешите доступ к камере в настройках браузера" : "Для камеры откройте защищённую HTTPS-ссылку"; }
 }
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
 target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; arInterface.setAttribute("visible", false); }, 700); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
