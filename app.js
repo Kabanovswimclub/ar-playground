@@ -74,7 +74,7 @@ function entity(tag, attrs = {}) {
 }
 
 function addPlane({ title, subtitle, number, tone = "aqua", position, width = .58, height = .16, action, delay = 0, panel = false }) {
-  const plane = entity("a-plane", { position: `${position[0]} ${position[1]} ${position[2] || .08}`, width, height, material: `src: ${makeTexture({ title, subtitle, number, tone, wide: width > .7, panel })}; transparent: true; shader: flat; alphaTest: 0.02`, scale: "0.001 0.001 0.001", animation__in: `property: scale; to: 1 1 1; dur: 420; delay: ${delay}; easing: easeOutBack` });
+  const plane = entity("a-plane", { position: `${position[0]} ${position[1]} ${position[2] || .08}`, width, height, material: `src: ${makeTexture({ title, subtitle, number, tone, wide: width > .7, panel })}; transparent: true; shader: flat; alphaTest: 0.02` });
   if (action) {
     plane.classList.add("clickable"); plane.dataset.action = action;
     plane.addEventListener("mouseenter", () => plane.setAttribute("scale", "1.06 1.06 1.06"));
@@ -143,8 +143,8 @@ async function startScanner() {
 
 function stopScanner() { if (arStarted) { scene.systems["mindar-image-system"].stop(); arStarted = false; } }
 function openContent() { stopScanner(); showScreen("content"); }
-target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; arInterface.setAttribute("visible", true); renderAR(view); navigator.vibrate?.(60); });
-target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; arInterface.setAttribute("visible", false); }, 700); });
+target.addEventListener("targetFound", () => { clearTimeout(lostTimer); clearTimeout(searchTimer); scanHint.hidden = true; tapTip.hidden = false; scanStatus.textContent = "Карточка распознана"; navigator.vibrate?.(60); });
+target.addEventListener("targetLost", () => { scanStatus.textContent = "Верните карточку в кадр"; tapTip.hidden = true; lostTimer = setTimeout(() => { scanHint.hidden = false; }, 700); });
 document.querySelector("#start-scan").addEventListener("click", startScanner);
 document.querySelector("#demo-mode").addEventListener("click", openContent);
 document.querySelector("#cancel-scan").addEventListener("click", () => { stopScanner(); showScreen("welcome"); });
